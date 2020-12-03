@@ -27,99 +27,88 @@ Totem.license   =   "MIT - https://opensource.org/licenses/MIT"
 function Totem:init()
     self.windowPositions = {}
     self.positions = {
-        center          =       {xu = 0,   yu = 0,   wu = 1,   hu = 1},
-        left            =       {xu = 0,   yu = 0,   wu = 0.5, hu = 1}, 
-        right           =       {xu = 0.5, yu = 0,   wu = 0.5, hu = 1}, 
-        top             =       {xu = 0,   yu = 0,   wu = 1,   hu = 0.5}, 
-        bottom          =       {xu = 0,   yu = 0.5, wu = 1,   hu = 0.5},
-        top_left        =       {xu = 0,   yu = 0,   wu = 0.5, hu = 0.5}, 
-        top_right       =       {xu = 0.5, yu = 0,   wu = 0.5, hu = 0.5}, 
-        bottom_right    =       {xu = 0.5, yu = 0.5, wu = 0.5, hu = 0.5}, 
-        bottom_left     =       {xu = 0,   yu = 0.5, wu = 0.5, hu = 0.5},
-        third_left      =       {xu = 0,   yu = 0,   wu = 1/3, hu = 1}, 
-        third_center    =       {xu = 1/3, yu = 0,   wu = 1/3, hu = 1}, 
-        third_right     =       {xu = 2/3, yu = 0,   wu = 1/3, hu = 1},
-        two_third_left  =       {xu = 0,   yu = 0,   wu = 2/3, hu = 1},
-        two_third_right =       {xu = 1/3, yu = 0,   wu = 2/3, hu = 1},
+        center = hs.geometry.rect(0,0,1,1),
+        left = hs.geometry.rect(0,0,0.5,1), 
+        right = hs.geometry.rect(0.5,0,.5,1), 
+        top = hs.geometry.rect(0,0,1,0.5), 
+        bottom = hs.geometry.rect(0,0.5,1,0.5),
+        top_left = hs.geometry.rect(0,0,0.5,0.5), 
+        top_right = hs.geometry.rect(0.5,0,0.5,0.5), 
+        bottom_right = hs.geometry.rect(0.5,0.5,0.5,0.5), 
+        bottom_left = hs.geometry.rect(0,0.5,0.5,0.5),
+        third_left = hs.geometry.rect(0,0,1/3,1), 
+        third_center = hs.geometry.rect(1/3,0,1/3,1), 
+        third_right = hs.geometry.rect(2/3,0,1/3,1),
+        two_third_left = hs.geometry.rect(0,0,2/3,1),
+        two_third_right = hs.geometry.rect(1/3,0,2/3,1),
     }
 end
+
+-- function Totem:start()
+--   for k, app in pairs(hs.application.runningApplications()) do
+--       hs.tabs.enableForApp(app)
+--   end
+--   self.applicationWatcher = hs.application.watcher.new(function(appname, event, app)
+--       if event == hs.application.watcher.launched then
+--         hs.tabs.enableForApp(app)
+--       end
+--   end)
+-- end
+
+-- function Totem:stop()
+--     this.applicationWatcher:stop()
+-- end
 
 function Totem:bindHotKeys(mapping)
     local spec = {}
     for k,v in pairs(mapping) do
         local position = self.positions[k]
         if position ~= nil then
-            spec[k] = hs.fnutils.partial(self.positionWindow, self, position)
+            spec[k] = hs.fnutils.partial(self.setWindowInPosition, self, position)
         end
-    end
-    if mapping.fullscreen ~= nill then
-        spec.fullscreen = hs.fnutils.partial(self.toggleFullscreen, self)
     end
     hs.spoons.bindHotkeysToSpec(spec, mapping)
 end
 
-function Totem:positionWindow(position)
+function Totem:setWindowInPosition(position)
     local window = hs.window.focusedWindow()
     local screen = window:screen()
     local windowFrame = window:frame()
     local screenFrame = screen:frame()
-    if not self:isInPosition(window, position) then
-        windowFrame.x = screenFrame.w * position.xu + screenFrame.x 
-        windowFrame.y = screenFrame.h * position.yu + screenFrame.y
-        windowFrame.w = screenFrame.w * position.wu
-        windowFrame.h = screenFrame.h * position.hu
-        self.windowPositions[window:id()] = position
-        window:setFrame(windowFrame) 
-        self:placeInScreenBounds(window)       
-    end
-end
-
-function Totem:toggleFullscreen()
-    local window = hs.window.focusedWindow()
-    window:toggleFullscreen()
-end
-
-function Totem:placeInScreenBounds(window)
-    windowFrame = window:frame()
-    screenFrame = window:screen():frame()
-    x, y = windowFrame.x, windowFrame.y
-    w, h = windowFrame.w, windowFrame.h
-    if windowFrame.x < screenFrame.x then
-        x = screenFrame.x
-    elseif windowFrame.x + windowFrame.w > screenFrame.w then
-        x = screenFrame.w - windowFrame.w
-    end
-    if windowFrame.y < screenFrame.y then
-        y = screenFrame.y
-    elseif windowFrame.y + windowFrame.h > screenFrame.h then
-        y = screenFrame.h - windowFrame.h
-    end
-    if x ~= windowFrame.x or y ~= windowFrame.y then
-        window:setTopLeft(hs.geometry.point(x, y))
-    end
-end
-
-function Totem:isInPosition(window, position)
-    return  equivalent(self.windowPositions[window:id()], position)
-end
-
-function equivalent(pos1, pos2)
-    if pos1 == nil and pos2 == nil then
-        return true
-    elseif pos1 == nil or pos2 == nil then
-        return false
+    if self:isWindowInPosition(window, position) then
+        -- cycling sizes feature?
     else
-        return pos1.xu == pos2.xu and pos1.yu == pos2.yu and 
-               pos1.wu == pos2.wu and pos1.hu == pos2.hu
+        windowFrame.x = screenFrame.w * position.x + screenFrame.x 
+        windowFrame.y = screenFrame.h * position.y + screenFrame.y
+        windowFrame.w = screenFrame.w * position.w
+        windowFrame.h = screenFrame.h * position.h
+        self.windowPositions[window:id()] = position
+        window:setFrameInScreenBounds(windowFrame) 
     end
+end
+
+function Totem:isWindowInPosition(window, position)
+    return  compareRect(self.windowPositions[window:id()], position)
+end
+
+-- TODO move to utils file
+function compareRect(rect1, rect2)
+  if rect1 == nil and rect2 == nil then
+      return true
+  elseif rect1 == nil or rect2 == nil then
+      return false
+  else
+      return rect1.x == rect2.x and rect1.y == rect2.y and 
+             rect1.w == rect2.w and rect1.h == rect2.h
+  end
 end
 
 function invertTable(t)
-    local s={}
-    for k,v in pairs(t) do
-        s[v]=k
-    end
-    return s
+  local s={}
+  for k,v in pairs(t) do
+      s[v]=k
+  end
+  return s
 end
 
 return Totem
