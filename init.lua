@@ -44,21 +44,6 @@ function Totem:init()
     }
 end
 
--- function Totem:start()
---   for k, app in pairs(hs.application.runningApplications()) do
---       hs.tabs.enableForApp(app)
---   end
---   self.applicationWatcher = hs.application.watcher.new(function(appname, event, app)
---       if event == hs.application.watcher.launched then
---         hs.tabs.enableForApp(app)
---       end
---   end)
--- end
-
--- function Totem:stop()
---     this.applicationWatcher:stop()
--- end
-
 function Totem:bindHotKeys(mapping)
     local spec = {}
     for k,v in pairs(mapping) do
@@ -76,7 +61,7 @@ function Totem:setWindowInPosition(position)
     local windowFrame = window:frame()
     local screenFrame = screen:frame()
     if self:isWindowInPosition(window, position) then
-        -- cycling sizes feature?
+        window:move(windowFrame:toUnitRect(screenFrame), screen:next(), true, 0)
     else
         windowFrame.x = screenFrame.w * position.x + screenFrame.x 
         windowFrame.y = screenFrame.h * position.y + screenFrame.y
@@ -91,7 +76,6 @@ function Totem:isWindowInPosition(window, position)
     return  compareRect(self.windowPositions[window:id()], position)
 end
 
--- TODO move to utils file
 function compareRect(rect1, rect2)
   if rect1 == nil and rect2 == nil then
       return true
