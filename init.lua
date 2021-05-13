@@ -29,7 +29,7 @@ function Totem:init()
     self.positions = {
         center = hs.geometry.rect(0,0,1,1),
         left = hs.geometry.rect(0,0,0.5,1), 
-        right = hs.geometry.rect(0.5,0,.5,1), 
+        right = hs.geometry.rect(0.5,0,0.5,1), 
         top = hs.geometry.rect(0,0,1,0.5), 
         bottom = hs.geometry.rect(0,0.5,1,0.5),
         top_left = hs.geometry.rect(0,0,0.5,0.5), 
